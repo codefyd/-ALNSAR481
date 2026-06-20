@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بوابة العاملين — Supabase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">ن</div>
+        <div>
+          <h1>بوابة العاملين — نظام حلق النصار</h1>
+          <p>نسخة Supabase الجديدة للصلاحيات والربط الإداري</p>
+        </div>
+      </div>
+      <button id="logoutBtn" class="btn secondary" style="display:none">تسجيل الخروج</button>
+    </div>
+
+    <section id="loginView" class="login-wrap">
+      <div class="hero card">
+        <h2>دخول آمن حسب الدور والصلاحيات</h2>
+        <p>
+          هذه الصفحة لا تعتمد على Google Sheets أو Google Apps Script. جميع البيانات والصلاحيات تُقرأ من Supabase.
+        </p>
+        <div class="hero-grid">
+          <div class="hero-item"><strong>مدير</strong><span>يرى ويدير كل شيء.</span></div>
+          <div class="hero-item"><strong>مشرف تعليمي</strong><span>يتابع الحلق التعليمية المسندة له.</span></div>
+          <div class="hero-item"><strong>مشرف إداري</strong><span>يتابع القبول والغياب والإنذارات.</span></div>
+          <div class="hero-item"><strong>استثناءات</strong><span>منح أو سحب صلاحيات بدون تغيير الدور.</span></div>
+        </div>
+      </div>
+
+      <form id="loginForm" class="login-card card">
+        <h2>تسجيل الدخول</h2>
+        <p>استخدم حساب Supabase Authentication الذي أنشأته من لوحة المشروع.</p>
+        <div class="field">
+          <label for="email">البريد الإلكتروني</label>
+          <input id="email" type="email" autocomplete="email" required placeholder="name@example.com">
+        </div>
+        <div class="field">
+          <label for="password">كلمة المرور</label>
+          <input id="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+        <button id="loginBtn" class="btn full" type="submit">دخول</button>
+        <div id="loginAlert" class="alert"></div>
+      </form>
+    </section>
+
+    <section id="dashboardView" class="dashboard">
+      <div class="shell">
+        <aside class="sidebar card">
+          <div class="user-box">
+            <h3 id="userName">—</h3>
+            <p id="userEmail">—</p>
+            <div id="userRole" class="role-badge">—</div>
+          </div>
+          <nav class="nav" id="sideNav">
+            <button type="button" class="active" data-page="home">الرئيسية</button>
+            <button type="button" data-page="permissions">فحص الصلاحيات</button>
+            <button type="button" data-page="assignments">الحلق المسندة</button>
+            <button type="button" data-page="next">الخطوة التالية</button>
+          </nav>
+        </aside>
+
+        <div class="main">
+          <section id="page-home" class="section card">
+            <h2>ملخص الحساب</h2>
+            <div class="kpi-grid" style="margin-top:12px">
+              <div class="kpi"><span>عدد الحلق</span><strong id="countHalaqat">—</strong></div>
+              <div class="kpi"><span>عدد الطلاب</span><strong id="countStudents">—</strong></div>
+              <div class="kpi"><span>عدد البرامج</span><strong id="countPrograms">—</strong></div>
+              <div class="kpi"><span>ربط الحلق</span><strong id="countAssignments">—</strong></div>
+            </div>
+            <p style="margin-top:14px">
+              إذا ظهرت الأرقام والدور بدون أخطاء، فهذا يعني أن الواجهة اتصلت بنجاح مع جداول Supabase والصلاحيات.
+            </p>
+          </section>
+
+          <section id="page-permissions" class="section card" style="display:none">
+            <div class="toolbar">
+              <div>
+                <h2>فحص الصلاحيات</h2>
+                <p>هذه عينة من الصلاحيات الأساسية حسب دور المستخدم والاستثناءات.</p>
+              </div>
+              <button id="refreshPermissionsBtn" class="btn secondary" type="button">تحديث</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>الصلاحية</th><th>الحالة</th></tr>
+                </thead>
+                <tbody id="permissionsRows">
+                  <tr><td colspan="2">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="page-assignments" class="section card" style="display:none">
+            <div class="toolbar">
+              <div>
+                <h2>الحلق المسندة</h2>
+                <p>يعرض الحلق أو المهام المرتبطة بحسابك من جدول staff_assignments.</p>
+              </div>
+              <button id="refreshAssignmentsBtn" class="btn secondary" type="button">تحديث</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>الحلقة</th><th>الدور في الحلقة</th><th>أساسي؟</th><th>بداية</th><th>نهاية</th></tr>
+                </thead>
+                <tbody id="assignmentRows">
+                  <tr><td colspan="5">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="page-next" class="section card" style="display:none">
+            <h2>الخطوة التالية</h2>
+            <p>
+              بعد نجاح الدخول والصلاحيات، الصفحة التالية التي نبنيها هي صفحة <strong>الحلق وربط العاملين</strong>:
+              إضافة حلقة، ربط مشرف تعليمي، ربط مشرف إداري، ربط معلم، مساعد، ومسمع/مختبر.
+            </p>
+            <div class="hero-grid">
+              <div class="hero-item"><strong>halaqat</strong><span>إدارة بيانات الحلق.</span></div>
+              <div class="hero-item"><strong>staff_assignments</strong><span>ربط العاملين بالحلق والنطاق.</span></div>
+              <div class="hero-item"><strong>user_permission_overrides</strong><span>منح أو سحب صلاحية محددة.</span></div>
+              <div class="hero-item"><strong>attendance_schemes</strong><span>تحديد نوع التحضير لكل حلقة وبرنامج.</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-core.js"></script>
+  <script>
+    const API = window.AlNsarSupabase;
+    const permissionLabels = {
+      'system.full_access': 'وصول كامل للنظام',
+      'users.manage': 'إدارة المستخدمين',
+      'roles.manage': 'إدارة الأدوار',
+      'permissions.manage': 'إدارة الصلاحيات والاستثناءات',
+      'halaqat.view': 'عرض الحلق',
+      'halaqat.assign_staff': 'ربط العاملين بالحلق',
+      'students.view': 'عرض الطلاب',
+      'attendance.view': 'عرض التحضير',
+      'attendance.record': 'تسجيل التحضير',
+      'education.weekly.view': 'عرض الربط الأسبوعي',
+      'education.weekly.evaluate': 'تقييم الربط الأسبوعي',
+      'education.hizb.test_record': 'تسجيل اختبار الحزب',
+      'education.reports.view': 'عرض تقارير البرنامج التعليمي',
+      'warnings.admin.manage': 'إدارة الإنذارات الإدارية',
+      'warnings.educational.followup': 'متابعة الإنذارات التعليمية'
+    };
+    const permissionsToCheck = Object.keys(permissionLabels);
+
+    function setAlert(id, type, message) {
+      const el = API.qs(id);
+      if (!el) return;
+      el.className = 'alert ' + (type || '');
+      el.textContent = message || '';
+      el.style.display = message ? 'block' : 'none';
+    }
+
+    function showPage(name) {
+      ['home', 'permissions', 'assignments', 'next'].forEach(function (page) {
+        API.show('page-' + page, page === name);
+      });
+      document.querySelectorAll('#sideNav button').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.page === name);
+      });
+    }
+
+    function renderShell() {
+      const profile = API.App.profile || {};
+      const role = API.App.role || null;
+      API.text('userName', profile.full_name || 'مستخدم بدون اسم');
+      API.text('userEmail', API.App.user ? API.App.user.email : '—');
+      API.html('userRole', API.roleBadge(role));
+      API.show('loginView', false);
+      API.show('dashboardView', true);
+      API.show('logoutBtn', true);
+    }
+
+    async function loadCounts() {
+      const counts = await Promise.all([
+        API.safeCount('halaqat', ['halaqat.view']),
+        API.safeCount('students', ['students.view']),
+        API.safeCount('programs', ['education.programs.manage', 'attendance.view', 'education.reports.view']),
+        API.safeCount('staff_assignments', ['halaqat.assign_staff', 'halaqat.view'])
+      ]);
+      API.text('countHalaqat', counts[0] == null ? 'لا صلاحية' : counts[0]);
+      API.text('countStudents', counts[1] == null ? 'لا صلاحية' : counts[1]);
+      API.text('countPrograms', counts[2] == null ? 'لا صلاحية' : counts[2]);
+      API.text('countAssignments', counts[3] == null ? 'لا صلاحية' : counts[3]);
+    }
+
+    async function loadPermissions() {
+      const rows = API.qs('permissionsRows');
+      rows.innerHTML = '<tr><td colspan="2">جاري التحميل...</td></tr>';
+      const result = await API.listAllowedPermissions(permissionsToCheck);
+      rows.innerHTML = result.map(function (item) {
+        const badge = item.allowed
+          ? '<span class="badge ok">مسموح</span>'
+          : '<span class="badge warn">غير مسموح</span>';
+        return '<tr><td>' + API.escapeHtml(permissionLabels[item.code] || item.code) + '<br><small>' + API.escapeHtml(item.code) + '</small></td><td>' + badge + '</td></tr>';
+      }).join('') || '<tr><td colspan="2">لا توجد صلاحيات للفحص.</td></tr>';
+    }
+
+    async function loadAssignments() {
+      const rows = API.qs('assignmentRows');
+      rows.innerHTML = '<tr><td colspan="5">جاري التحميل...</td></tr>';
+      const data = await API.listCurrentAssignments();
+      if (!data.length) {
+        rows.innerHTML = '<tr><td colspan="5">لا توجد حلق مسندة لحسابك حاليًا.</td></tr>';
+        return;
+      }
+      rows.innerHTML = data.map(function (item) {
+        const h = item.halaqat || {};
+        return '<tr>'
+          + '<td><strong>' + API.escapeHtml(h.name || '—') + '</strong><br><small>' + API.escapeHtml(h.code || h.stage || '—') + '</small></td>'
+          + '<td>' + API.escapeHtml(item.assignment_role || '—') + '</td>'
+          + '<td>' + (item.is_primary ? '<span class="badge ok">نعم</span>' : '<span class="badge warn">لا</span>') + '</td>'
+          + '<td>' + API.escapeHtml(API.formatDate(item.starts_on)) + '</td>'
+          + '<td>' + API.escapeHtml(API.formatDate(item.ends_on)) + '</td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    async function afterLogin() {
+      await API.loadProfile();
+      renderShell();
+      await Promise.all([loadCounts(), loadPermissions(), loadAssignments()]);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const btn = API.qs('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'جاري الدخول...';
+      setAlert('loginAlert', '', '');
+      try {
+        await API.signIn(API.qs('email').value.trim(), API.qs('password').value);
+        await afterLogin();
+      } catch (error) {
+        setAlert('loginAlert', 'err', error.message || 'تعذر تسجيل الدخول.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'دخول';
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async function () {
+      await API.signOut();
+      API.show('dashboardView', false);
+      API.show('logoutBtn', false);
+      API.show('loginView', true);
+    });
+
+    document.querySelectorAll('#sideNav button').forEach(function (btn) {
+      btn.addEventListener('click', function () { showPage(btn.dataset.page); });
+    });
+    document.getElementById('refreshPermissionsBtn').addEventListener('click', loadPermissions);
+    document.getElementById('refreshAssignmentsBtn').addEventListener('click', loadAssignments);
+
+    (async function boot() {
+      try {
+        await API.getSession();
+        if (API.App.user) await afterLogin();
+      } catch (error) {
+        setAlert('loginAlert', 'err', error.message || 'تعذر تهيئة الاتصال.');
+      }
+    })();
+  </script>
+</body>
+</html>
