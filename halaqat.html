@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الحلق وربط العاملين — نظام حلق النصار</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+  <main class="page wide-page">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">ن</div>
+        <div>
+          <h1>الحلق وربط العاملين</h1>
+          <p>إدارة الحلق وإسناد المشرفين والمعلمين والمساعدين والمسمعين</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <a class="btn secondary" href="staff-v2.html">بوابة العاملين</a>
+        <button id="logoutBtn" class="btn secondary" type="button">تسجيل الخروج</button>
+      </div>
+    </div>
+
+    <section id="authGuard" class="section card" style="margin-top:18px;display:none">
+      <h2>يلزم تسجيل الدخول</h2>
+      <p>سجّل الدخول من بوابة العاملين أولًا، ثم ارجع لهذه الصفحة.</p>
+      <a class="btn" href="staff-v2.html" style="margin-top:14px">الذهاب لتسجيل الدخول</a>
+    </section>
+
+    <section id="pageApp" class="dashboard" style="display:none">
+      <div class="shell shell-wide">
+        <aside class="sidebar card">
+          <div class="user-box">
+            <h3 id="userName">—</h3>
+            <p id="userEmail">—</p>
+            <div id="userRole" class="role-badge">—</div>
+          </div>
+          <nav class="nav" id="sideNav">
+            <button type="button" class="active" data-page="overview">نظرة عامة</button>
+            <button type="button" data-page="halaqat">إدارة الحلق</button>
+            <button type="button" data-page="assignments">ربط العاملين</button>
+            <button type="button" data-page="users">العاملون</button>
+          </nav>
+        </aside>
+
+        <div class="main">
+          <section id="page-overview" class="section card">
+            <div class="section-head">
+              <div>
+                <h2>ملخص الحلق والربط</h2>
+                <p>هذه الصفحة تقرأ من Supabase مباشرة وتطبق صلاحيات RLS حسب الدور والنطاق.</p>
+              </div>
+              <button id="refreshAllBtn" class="btn secondary" type="button">تحديث البيانات</button>
+            </div>
+
+            <div class="kpi-grid" style="margin-top:14px">
+              <div class="kpi"><span>الحلق النشطة</span><strong id="kpiActiveHalaqat">—</strong></div>
+              <div class="kpi"><span>كل الحلق</span><strong id="kpiAllHalaqat">—</strong></div>
+              <div class="kpi"><span>العاملون</span><strong id="kpiStaff">—</strong></div>
+              <div class="kpi"><span>الإسنادات النشطة</span><strong id="kpiAssignments">—</strong></div>
+            </div>
+
+            <div class="notice-box" id="permissionNotice" style="margin-top:14px"></div>
+          </section>
+
+          <section id="page-halaqat" class="section card" style="display:none">
+            <div class="section-head">
+              <div>
+                <h2>إدارة الحلق</h2>
+                <p>أضف الحلقة ثم اربط بها المشرفين والمعلمين من تبويب ربط العاملين.</p>
+              </div>
+              <button id="resetHalaqaFormBtn" class="btn secondary" type="button">إضافة حلقة جديدة</button>
+            </div>
+
+            <form id="halaqaForm" class="form-grid compact-form" style="margin-top:14px">
+              <input type="hidden" id="halaqaId">
+              <div class="field">
+                <label for="halaqaName">اسم الحلقة</label>
+                <input id="halaqaName" required placeholder="مثال: حلقة أبي بكر">
+              </div>
+              <div class="field">
+                <label for="halaqaCode">كود مختصر</label>
+                <input id="halaqaCode" placeholder="مثال: H-001">
+              </div>
+              <div class="field">
+                <label for="halaqaStage">المرحلة / المسار</label>
+                <input id="halaqaStage" placeholder="مثال: ابتدائي / متوسط / عام">
+              </div>
+              <div class="field">
+                <label for="halaqaStatus">الحالة</label>
+                <select id="halaqaStatus">
+                  <option value="active">نشطة</option>
+                  <option value="inactive">غير نشطة</option>
+                  <option value="archived">مؤرشفة</option>
+                </select>
+              </div>
+              <div class="field full-row">
+                <label for="halaqaDescription">ملاحظات</label>
+                <textarea id="halaqaDescription" rows="3" placeholder="ملاحظات اختيارية"></textarea>
+              </div>
+              <div class="form-actions full-row">
+                <button id="saveHalaqaBtn" class="btn" type="submit">حفظ الحلقة</button>
+                <div id="halaqaAlert" class="alert inline-alert"></div>
+              </div>
+            </form>
+
+            <div class="toolbar" style="margin-top:20px">
+              <div class="search-box">
+                <input id="halaqaSearch" placeholder="بحث باسم الحلقة أو الكود أو المرحلة">
+              </div>
+              <button id="refreshHalaqatBtn" class="btn secondary" type="button">تحديث الحلق</button>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الحلقة</th>
+                    <th>الكود</th>
+                    <th>المرحلة</th>
+                    <th>الحالة</th>
+                    <th>إسنادات نشطة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="halaqatRows">
+                  <tr><td colspan="6">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="page-assignments" class="section card" style="display:none">
+            <div class="section-head">
+              <div>
+                <h2>ربط العاملين بالحلق</h2>
+                <p>اختر الحلقة والعامل ونوع الإسناد. يمكن جعل الإسناد مؤقتًا بتحديد تاريخ نهاية.</p>
+              </div>
+              <button id="resetAssignmentFormBtn" class="btn secondary" type="button">تفريغ النموذج</button>
+            </div>
+
+            <form id="assignmentForm" class="form-grid compact-form" style="margin-top:14px">
+              <div class="field">
+                <label for="assignmentHalaqa">الحلقة</label>
+                <select id="assignmentHalaqa" required></select>
+              </div>
+              <div class="field">
+                <label for="assignmentUser">العامل</label>
+                <select id="assignmentUser" required></select>
+              </div>
+              <div class="field">
+                <label for="assignmentRole">نوع الإسناد</label>
+                <select id="assignmentRole" required>
+                  <option value="edu_supervisor">مشرف تعليمي</option>
+                  <option value="admin_supervisor">مشرف إداري</option>
+                  <option value="teacher">معلم</option>
+                  <option value="assistant_teacher">مساعد معلم</option>
+                  <option value="listener_tester">مسمع ومختبر</option>
+                  <option value="external_supervisor">مشرف خارجي</option>
+                </select>
+              </div>
+              <div class="field check-field">
+                <label>أساسي؟</label>
+                <label class="check-line"><input id="assignmentPrimary" type="checkbox"> إسناد أساسي</label>
+              </div>
+              <div class="field">
+                <label for="assignmentStart">تاريخ البداية</label>
+                <input id="assignmentStart" type="date">
+              </div>
+              <div class="field">
+                <label for="assignmentEnd">تاريخ النهاية</label>
+                <input id="assignmentEnd" type="date">
+              </div>
+              <div class="field full-row">
+                <label for="assignmentNotes">ملاحظات</label>
+                <textarea id="assignmentNotes" rows="3" placeholder="مثال: إسناد مؤقت للتحضير خلال برنامج صيفي"></textarea>
+              </div>
+              <div class="form-actions full-row">
+                <button id="saveAssignmentBtn" class="btn" type="submit">حفظ الربط</button>
+                <div id="assignmentAlert" class="alert inline-alert"></div>
+              </div>
+            </form>
+
+            <div class="toolbar" style="margin-top:20px">
+              <div class="filters-row">
+                <select id="assignmentFilterHalaqa"></select>
+                <select id="assignmentFilterRole">
+                  <option value="">كل أنواع الإسناد</option>
+                  <option value="edu_supervisor">مشرف تعليمي</option>
+                  <option value="admin_supervisor">مشرف إداري</option>
+                  <option value="teacher">معلم</option>
+                  <option value="assistant_teacher">مساعد معلم</option>
+                  <option value="listener_tester">مسمع ومختبر</option>
+                  <option value="external_supervisor">مشرف خارجي</option>
+                </select>
+              </div>
+              <button id="refreshAssignmentsBtn" class="btn secondary" type="button">تحديث الربط</button>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الحلقة</th>
+                    <th>العامل</th>
+                    <th>نوع الإسناد</th>
+                    <th>أساسي</th>
+                    <th>المدة</th>
+                    <th>الحالة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="assignmentsRows">
+                  <tr><td colspan="7">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="page-users" class="section card" style="display:none">
+            <div class="section-head">
+              <div>
+                <h2>العاملون المتاحون للربط</h2>
+                <p>هذه القائمة من جدول profiles. إنشاء حساب جديد يتم من Supabase Authentication ثم يضاف له profile.</p>
+              </div>
+              <button id="refreshUsersBtn" class="btn secondary" type="button">تحديث العاملين</button>
+            </div>
+            <div class="table-wrap" style="margin-top:14px">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>الجوال</th>
+                    <th>الدور</th>
+                    <th>الحالة</th>
+                  </tr>
+                </thead>
+                <tbody id="usersRows">
+                  <tr><td colspan="4">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="assets/js/supabase-core.js"></script>
+  <script src="assets/js/halaqat-page.js"></script>
+</body>
+</html>
